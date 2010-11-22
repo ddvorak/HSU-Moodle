@@ -6512,6 +6512,8 @@ function can_use_html_editor() {
             return 'MSIE';
         } else if (check_browser_version('Gecko', 20030516)) {
             return 'Gecko';
+        } else {
+            return 1; //Pall's Safari/Chrome editor hack
         }
     }
     return false;

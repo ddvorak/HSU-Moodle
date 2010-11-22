@@ -2432,7 +2432,6 @@ HTMLArea.cloneObject = function(obj) {
     return newObj;
 };
 
-// FIXME!!! this should return false for IE < 5.5
 HTMLArea.checkSupportedBrowser = function() {
     if (HTMLArea.is_gecko) {
         if (navigator.productSub < 20021201) {
@@ -2441,12 +2440,12 @@ HTMLArea.checkSupportedBrowser = function() {
             return false;
         }
         if (navigator.productSub < 20030210) {
-            alert("Mozilla < 1.3 Beta is not supported!\n" +
-                  "I'll try, though, but it might not work.");
+            return 'HTMLArea.is_gecko';
         }
     }
     if(HTMLArea.is_safari) {
-        return false;
+        //return false;
+        return 'HTMLArea.is_gecko';
     }
     return HTMLArea.is_gecko || HTMLArea.is_ie;
 };
