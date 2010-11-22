@@ -203,7 +203,11 @@ class block_quickmail extends block_list {
         Convenience method to retrieve the configured role selections
     */
     function grab_roles() {
-        return $this->config->roleselection;
+        if (isset($this->config->roleselection)) {
+            return $this->config->roleselection;
+        } else {
+            return null;
+        }
     }
 
 

@@ -97,7 +97,7 @@
     
     $sql = "SELECT DISTINCT CONCAT(r.id, '_', usr.username), r.id AS roleid, r.name, 
             r.shortname, usr.id AS userid, usr.username, usr.email, usr.firstname, 
-            usr.lastname, usr.mailformat
+            usr.lastname, usr.mailformat, usr.emailstop
      FROM mdl_course AS c         
         INNER JOIN mdl_context AS cx ON cx.id={$context->id}
         INNER JOIN mdl_role_assignments AS ra ON cx.id = ra.contextid
@@ -118,48 +118,51 @@
 
     $groupcontent = get_records_sql($sql);
 
-    foreach($dbcontent as $content_record) {
-        $userid = $content_record->userid;
-        $roleid = $content_record->roleid;
+    if (isset($dbcontent)) {
+        foreach($dbcontent as $content_record) {
+            $userid = $content_record->userid;
+            $roleid = $content_record->roleid;
 
-        if (!isset($roles_to_userid[$userid])){
-            $roles_to_userid[$userid] = array();
-        }
+            if (!isset($roles_to_userid[$userid])){
+                $roles_to_userid[$userid] = array();
+            }
 
-        $role = new stdClass;
-        $role->name = $content_record->name;
-        $role->shortname = $content_record->shortname;
-        $roles_to_userid[$userid][] = $role;
+            $role = new stdClass;
+            $role->name = $content_record->name;
+            $role->shortname = $content_record->shortname;
+            $roles_to_userid[$userid][] = $role;
 
-        if (!empty($groups)) {
-            foreach ($groups as $group) {
-                $index = $userid .'_'. $content_record->username .'_'. $group->id;
-                if (array_key_exists($index, $groupcontent)) {
+            if (!empty($groups)) {
+                foreach ($groups as $group) {
+                    $index = $userid .'_'. $content_record->username .'_'. $group->id;
+                    if (array_key_exists($index, $groupcontent)) {
 
-                    $record = $groupcontent[$index];
-                    if (!isset($groupmembers_to_groupid[$record->userid])) {
-                        $groupmembers_to_groupid[$record->userid] = array();
+                        $record = $groupcontent[$index];
+                        if (!isset($groupmembers_to_groupid[$record->userid])) {
+                            $groupmembers_to_groupid[$record->userid] = array();
+                        }
+
+                        if (isset($groupmembers_to_groupid[$record->userid][$record->groupid])) {
+                            continue;
+                        }
+                        $groupmembers_to_groupid[$record->userid][$record->groupid] = $groups[$record->groupid];
                     }
-
-                    if (isset($groupmembers_to_groupid[$record->userid][$record->groupid])) {
-                        continue;
-                    }
-                    $groupmembers_to_groupid[$record->userid][$record->groupid] = $groups[$record->groupid];
                 }
             }
-        }
 
-        if (isset($courseusers[$userid])) {
-            continue;
-        }
+            if (isset($courseusers[$userid])) {
+                continue;
+            }
 
-        $user = new stdClass;
-        $user->firstname = $content_record->firstname;
-        $user->lastname = $content_record->lastname;
-        $user->email = $content_record->email;
-        $user->id = $userid;
-        $user->mailformat = $content_record->mailformat;
-        $courseusers[$userid] = $user;
+            $user = new stdClass;
+            $user->firstname = $content_record->firstname;
+            $user->lastname = $content_record->lastname;
+            $user->email = $content_record->email;
+            $user->id = $userid;
+            $user->mailformat = $content_record->mailformat;
+            $user->emailstop = $content_record->emailstop;
+            $courseusers[$userid] = $user;
+        }
     }
 
 	//Get list of users enrolled in the course including teachers and students

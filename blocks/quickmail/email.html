@@ -54,36 +54,38 @@
           <!-- Populate mailto list from $mail_list that stored list of users to be emailed variable -->
 		  <select name="mail_to" size="31" multiple id="mail_to" style="width:250px">
 			<?php
-				foreach($mail_list as $id) { 
-          			$id = stripslashes($id);
-					$id = str_replace("\"","",$id);
-					if($id != ""){
-                     $mail_groups = array();
-                     $mail_groups = $groupmembers_to_groupid[$id];
-                     if (!$mail_groups){
-                         $mail_group = new stdClass();
-                         $mail_group->id = 0;
-                         $mail_group->name = get_string('nosection', 'block_quickmail');
-                         $mail_groups[] = $group;
-                     }
-                     $groupsid = '';
-                     $groups_name = '';
-                     foreach ($mail_groups as $group) {
-                         $groupsid .= '' . $group->id . ',';
-                         $groups_name .= '' . $group->name . ',';
-                     }
-                     
-                    $user_roles = '';
-                    foreach ($roles_to_userid[$user->id] as $role) {
-                        $user_roles .= $role->shortname . ',';
-                    }
- 
-                     echo '<option value="'.$id.' '. $courseusers[$id]->email.' '. $groupsid . ' '.'' .'">'.
-                             fullname($courseusers[$id], true).' ('. trim($groups_name, ",").')</option>';
+				if (isset($mail_list)) {
+                                    foreach($mail_list as $id) {
+                                        $id = stripslashes($id);
+                                        $id = str_replace("\"","",$id);
+                                        if($id != "") {
+                                            $mail_groups = array();
+                                            $mail_groups = $groupmembers_to_groupid[$id];
+                                            if (!$mail_groups) {
+                                                $mail_group = new stdClass();
+                                                $mail_group->id = 0;
+                                                $mail_group->name = get_string('nosection', 'block_quickmail');
+                                                $mail_groups[] = $group;
+                                            }
+                                            $groupsid = '';
+                                            $groups_name = '';
+                                            foreach ($mail_groups as $group) {
+                                                $groupsid .= '' . $group->id . ',';
+                                                $groups_name .= '' . $group->name . ',';
+                                            }
 
-					}
-          		}				
-       		?>
+                                            $user_roles = '';
+                                            foreach ($roles_to_userid[$user->id] as $role) {
+                                                $user_roles .= $role->shortname . ',';
+                                            }
+
+                                            echo '<option value="'.$id.' '. $courseusers[$id]->email.' '. $groupsid . ' '.'' .'">'.
+                                                fullname($courseusers[$id], true).' ('. trim($groups_name, ",").')</option>';
+
+                                    }
+                                }
+                            }
+                        ?>
 		</select>
         </div></td>
         </tr></table></td>
@@ -107,8 +109,11 @@
             <?php
                 $no_filter = get_string('no_filter', 'block_quickmail');
                 echo "<option value=\"none\" selected=\"selected\">$no_filter</option>";
-                foreach($quickmail->grab_roles() as $role_shortname => $role_name) {
-                    echo '<option value="'. $role_shortname .'">'.$role_name.'s only</option>';
+                $roles = $quickmail->grab_roles();
+                if (isset($roles)) {
+                    foreach($roles as $role_shortname => $role_name) {
+                        echo '<option value="'. $role_shortname .'">'.$role_name.'s only</option>';
+                    }
                 }
             ?>
             </select></div>
@@ -138,41 +143,45 @@
       <!-- Populate members list from $courseusers that stores list of users in the course -->		  
 	  <select name="members" size="20" multiple id="members" style="width:250px">
       <?php
-		foreach($courseusers as $user) { 
-			$show = true;
-			//if the id already exists in mail_list id then do not display
-			foreach($mail_list as $id){
-				$id = stripslashes($id);
-				$id = str_replace("\"","",$id);
-				if($id == $user->id){
-					$show = false;
-				}						
-			}
-			if($show){
-                    $groups = array();
-                    $groups = $groupmembers_to_groupid[$user->id];
-                    if (!$groups){
-                        $group = new stdClass();
-                        $group->id = 0;
-                        $group->name = get_string('nosection', 'block_quickmail');
-                        $groups[] = $group;
+        foreach($courseusers as $user) {
+            $show = true;
+            //if the id already exists in mail_list id then do not display
+            if (isset($mail_list)) {
+                foreach($mail_list as $id){
+                    $id = stripslashes($id);
+                    $id = str_replace("\"","",$id);
+                    if($id == $user->id){
+                        $show = false;
                     }
-                    $groupsid = '';
-                    $groups_name = '';
-                    foreach ($groups as $group) {
-                        $groupsid .= '' . $group->id . ',';
-                        $groups_name .= '' . $group->name . ',';
-                    }                     
-
-                    $user_roles = '';
-                    foreach ($roles_to_userid[$user->id] as $role) {
-                        $user_roles .= $role->shortname . ',';
-                    }
-                    
-                    echo '<option value="'.$user->id.' '.$user->email.' '. $groupsid . ' '. $user_roles .'">'. 
-                            fullname($user, true).' ('. trim($groups_name, ",").')</option>';
                 }
-		    }
+            }
+            if($show){
+                $groups = array();
+                if (isset($groupmembers_to_groupid[$user->id])) {
+                    $groups = $groupmembers_to_groupid[$user->id];
+                }
+                if (!$groups) {
+                    $group = new stdClass();
+                    $group->id = 0;
+                    $group->name = get_string('nosection', 'block_quickmail');
+                    $groups[] = $group;
+                }
+                $groupsid = '';
+                $groups_name = '';
+                foreach ($groups as $group) {
+                    $groupsid .= '' . $group->id . ',';
+                    $groups_name .= '' . $group->name . ',';
+                }
+
+                $user_roles = '';
+                foreach ($roles_to_userid[$user->id] as $role) {
+                    $user_roles .= $role->shortname . ',';
+                }
+
+                echo '<option value="'.$user->id.' '.$user->email.' '. $groupsid . ' '. $user_roles .'">'.
+                    fullname($user, true).' ('. trim($groups_name, ",").')</option>';
+            }
+        }
       ?>          
 	  </select>
     </div></td></tr></table></td>
