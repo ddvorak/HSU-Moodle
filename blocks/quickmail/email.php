@@ -118,7 +118,7 @@
 
     $groupcontent = get_records_sql($sql);
 
-    if (isset($dbcontent)) {
+    if (isset($dbcontent) && $dbcontent) {
         foreach($dbcontent as $content_record) {
             $userid = $content_record->userid;
             $roleid = $content_record->roleid;
@@ -229,36 +229,36 @@
         $attachment = array();
         
 		require_once($CFG->libdir.'/uploadlib.php');
-        
-        foreach ($attach_list as $attach_id) {
-            $um = new upload_manager($attach_id, false, true, $course, false, 0, true);
-			$attachment_success = true;
-            
-			// process the student posted attachment if it exists
-            foreach ($_FILES as $name => $file){
-				$file['originalname'] = $file['name'];
-			}
-			$attachment_success = $um->process_file_uploads('temp/block_quickmail');
-			if ($attachment_success) {
-                // original name gets saved in the database
-                $form->attachment .= $um->get_original_filename() .' ';
-				// check if file is there
-                if (file_exists($um->get_new_filepath())) {
-                    // get path to the file without $CFG->dataroot
-                    $attachment[$um->get_new_filename()] = 'temp/block_quickmail/'.$um->get_new_filename();
-                    //$attachment = 'temp/block_quickmail/'.$um->get_new_filename();
-                	
-                    // get the new name (name may change due to filename collisions)
-                    //$attachname = $um->get_new_filename();
-                } else {
-                    $form->error = get_string("attachmenterror", "block_quickmail", $form->attachment);
+
+        foreach ($_FILES as $name => &$file)  {
+            if ($file['size'] > 0) {
+
+                $um = new upload_manager($name, false, true, $course, false, 0, true);
+                $attachment_success = true;
+
+                // process the student posted attachment if it exists
+                $attachment_success = $um->process_file_uploads('temp/block_quickmail');
+                if ($attachment_success) {
+                    // original name gets saved in the database
+                    $form->attachment .= $um->get_original_filename() .' ';
+                    // check if file is there
+                    if (file_exists($um->get_new_filepath())) {
+                        // get path to the file without $CFG->dataroot
+                        $attachment[$um->get_new_filename()] = 'temp/block_quickmail/'.$um->get_new_filename();
+                        //$attachment = 'temp/block_quickmail/'.$um->get_new_filename();
+
+                        // get the new name (name may change due to filename collisions)
+                        //$attachname = $um->get_new_filename();
+                    } else {
+                        $form->error = get_string("attachmenterror", "block_quickmail", $form->attachment);
+                    }
                 }
-            } 
-			elseif($file['originalname']!='' && !$attachment_success){
-				$form->error = get_string("attachmentmaxsize", "block_quickmail", $form->attachment);
-			}
-			else{
-				$form->attachment .= ''; // no attachment
+                elseif(isset($file['originalname']) && $file['originalname']!='' && !$attachment_success){
+                    $form->error = get_string("attachmentmaxsize", "block_quickmail", $form->attachment);
+                }
+                else{
+                    $form->attachment .= ''; // no attachment
+                }
             }
         }        
         
