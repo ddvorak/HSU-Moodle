@@ -318,7 +318,7 @@
         // HSU mod for CRN search
         if (!empty($search)) {
         	if( is_numeric($search) ) {
-        		print_heading(get_string("nocrnfound", "", s($search, true)));
+                    print_heading(get_string("nocrnfound", "", $search));
         	} else {
                 print_heading(get_string("nocoursesfound", "", s($search, true)));
             }
