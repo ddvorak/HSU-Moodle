@@ -2152,6 +2152,7 @@ function print_my_moodle() {
         $rhosts   = get_my_remotehosts();
     }
 
+    $currentcat = 0;    //HSU mod to display courses by category
     if (!empty($courses) || !empty($rcourses) || !empty($rhosts)) {
 
         if (!empty($courses)) {
@@ -2175,29 +2176,59 @@ function print_my_moodle() {
                     $courses = $newOrder;
                     unset($newOrder);
                 }
-            }
-            //End course organize code
+            } //End course organize code
+            // HSU mod to display courses by category
+            else {
+                $hidden = false;
+                echo '<ul class="unlist">';
+                foreach ($courses as $course) {
+                    if ($course->id == SITEID) {
+                        continue;
+                    }
+                    $context = get_context_instance(CONTEXT_COURSE, $course->id);
+                    //print_course($course, "100%");
 
-            echo '<ul class="unlist">';
-            foreach ($courses as $course) {
-                if ($course->id == SITEID) {
-                    continue;
+                    if ($currentcat != $course->category) {
+                        $currentcat = $course->category;
+                        $category = get_record('course_categories', 'id', $currentcat);
+                        if ($course->visible) {
+                            print '<table align="center" width="100%"  class="coursebox" border="0" cellpadding="5" cellspacing="0"><tr><th align = left>'.$category->name.'</th></tr></table>';
+                        }
+                        else {
+                            print '<div id="hiddenmycourse" style="display:none"><table align="center" width="100%"  class="coursebox" border="0" cellpadding="5" cellspacing="0"><tr><th align = left>'.$category->name.'</th></tr></table></div>';
+                        }
+                    }
+                    if (($course->visible && $course->category) || has_capability('moodle/course:update', $context, $USER->id)) {
+                        if ($course->visible) {
+                            echo '<li>';
+                            print_course($course);
+                            echo "</li>\n";
+                        }
+                        else {
+                            $hidden = true;
+                            print '<div id="hiddenmycourse" style="display:none">';
+                            print_course($course, "100%");
+                            print '</div>';
+                        }
+                    }
                 }
-                echo '<li>';
-                print_course($course);
-                echo "</li>\n";
-            }
-            echo "</ul>\n";
-        }
+                echo "</ul>\n";
+                // output show/hide button
+                if ($hidden) {
+                    print '<div align="center"><input type="button" value="Show Hidden Courses" onClick="this.value=showHiddenMyCourses();" /><br /><br />';
+                }
 
+            }   //end HSU mod
+
+        }
         // MNET
         if (!empty($rcourses)) {
-            // at the IDP, we know of all the remote courses
+        // at the IDP, we know of all the remote courses
             foreach ($rcourses as $course) {
                 print_remote_course($course, "100%");
             }
         } elseif (!empty($rhosts)) {
-            // non-IDP, we know of all the remote servers, but not courses
+        // non-IDP, we know of all the remote servers, but not courses
             foreach ($rhosts as $host) {
                 print_remote_host($host, "100%");
             }
